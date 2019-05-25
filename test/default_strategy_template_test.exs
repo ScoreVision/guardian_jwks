@@ -1,11 +1,11 @@
-defmodule JokenJwks.DefaultStrategyTest do
+defmodule GuardianJwks.DefaultStrategyTest do
   use ExUnit.Case, async: false
 
   import ExUnit.CaptureLog
   import Mox
   import Tesla.Mock, only: [json: 1, json: 2]
   alias Joken.Signer
-  alias JokenJwks.TestUtils
+  alias GuardianJwks.TestUtils
 
   setup :set_mox_global
   setup :verify_on_exit!
@@ -14,10 +14,10 @@ defmodule JokenJwks.DefaultStrategyTest do
     use Joken.Config
 
     defmodule Strategy do
-      use JokenJwks.DefaultStrategyTemplate
+      use GuardianJwks.DefaultStrategyTemplate
     end
 
-    add_hook(JokenJwks, strategy: Strategy)
+    add_hook(GuardianJwks, strategy: Strategy)
 
     def token_config, do: %{}
   end
@@ -169,7 +169,7 @@ defmodule JokenJwks.DefaultStrategyTest do
       use Joken.Config
 
       defmodule Strategy do
-        use JokenJwks.DefaultStrategyTemplate
+        use GuardianJwks.DefaultStrategyTemplate
 
         @doc false
         def init_opts(other_opts) do
@@ -180,7 +180,7 @@ defmodule JokenJwks.DefaultStrategyTest do
         end
       end
 
-      add_hook(JokenJwks, strategy: Strategy)
+      add_hook(GuardianJwks, strategy: Strategy)
 
       def token_config, do: %{}
     end

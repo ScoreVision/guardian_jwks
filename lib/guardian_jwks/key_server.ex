@@ -1,19 +1,18 @@
-defmodule JokenJwks.DefaultStrategyTemplate do
+defmodule GuardianJwks.KeyServer do
   @moduledoc """
-  A `JokenJwks.SignerMatchStrategy` template that has a window of time for refreshing its 
-  cache. This is a template and not a concrete implementation. You should `use` this module
-  in order to use the default strategy.
+  A `GuardianJwks.KeyStorage` implementation that has a window of time for refreshing its
+  cache. You can `use` this module to manage keys for your JWKS public URL.
 
-  This implementation is a task that should be supervised. It loops on a time window checking 
-  whether it should re-fetch keys or not.
+  This implementation is a task that should be supervised. It loops on a time window checking
+  whether or not it needs to refresh keys.
 
   Every time a bad kid is received it writes to an ets table a counter to 1. When the task
   loops, it polls for the counter value. If it is more than zero it starts re-fetching the
-  cache. Upon successful fetching, it zeros the counter once again. This way we avoid 
+  cache. Upon successful fetching, it zeros the counter once again. This way we avoid
   overloading the JWKS server.
 
   It will try to fetch signers when supervision starts it. This can be a sync or async operation
-  depending on the value of `first_fetch_sync`. It defaults to `false`. 
+  depending on the value of `first_fetch_sync`. It defaults to `false`.
 
   ## Usage
 
@@ -27,7 +26,7 @@ defmodule JokenJwks.DefaultStrategyTemplate do
 
   ## Configuration
 
-  Other than the `init_opts/1` callback you can pass options through `Mix.Config` and when starting 
+  Other than the `init_opts/1` callback you can pass options through `Mix.Config` and when starting
   the supervisor. The order of preference in least significant order is:
     - Per environment `Mix.Config`
     - Supervisor child options
@@ -51,8 +50,8 @@ defmodule JokenJwks.DefaultStrategyTemplate do
 
   ### Example usage:
 
-      defmodule JokenExample.MyStrategy do
-        use JokenJwks.DefaultMatchStrategy
+      defmodule JwksExample.MyKeyServer do
+        use GuardianJwks.KeyServer
 
         def init_opts(opts) do
           url = # fetch url ...
@@ -60,13 +59,13 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         end
       end
 
-      defmodule JokenExample.Application do
+      defmodule JwksExample.Application do
         @doc false
         def start(_type, _args) do
           import Supervisor.Spec, warn: false
-      
+
           children = [
-            {MyStrategy, time_interval: 2_000}
+            {JwksExample.MyKeyServer, time_interval: 2_000}
           ]
 
           opts = [strategy: :one_for_one]
@@ -74,14 +73,11 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         end
       end
 
-  Then on your token configuration module:
+  Then, for your guardian configuration:
 
-      defmodule MyToken do
-        use Joken.Config
-
-        add_hook(JokenJwks, strategy: MyStrategy)
-        # rest of your token config
-      end
+      config :jwks_example, JwksExample.Guardian,
+        secret_fetcher: GuardianJwks.SecretFetcher,
+        jwks_key_server: JwksExample.MyKeyServer
   """
 
   defmacro __using__(_opts) do
@@ -92,10 +88,10 @@ defmodule JokenJwks.DefaultStrategyTemplate do
       require Logger
 
       alias __MODULE__.EtsCache
-      alias Joken.Signer
-      alias JokenJwks.{HttpFetcher, SignerMatchStrategy}
+      alias GuardianJwks.{HttpFetcher, KeyStorage}
+      alias JOSE.JWK
 
-      @behaviour SignerMatchStrategy
+      @behaviour KeyStorage
 
       defmodule EtsCache do
         @moduledoc "Simple ETS counter based state machine"
@@ -147,7 +143,7 @@ defmodule JokenJwks.DefaultStrategyTemplate do
       @doc false
       def start_link(opts) do
         opts =
-          Application.get_env(:joken_jwks, __MODULE__, [])
+          Application.get_env(:guardian_jwks, __MODULE__, [])
           |> Keyword.merge(opts)
           |> init_opts()
 
@@ -185,8 +181,8 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         end
       end
 
-      @impl SignerMatchStrategy
-      def match_signer_for_kid(kid, opts) do
+      @impl KeyStorage
+      def find_key_by_kid(kid, _mod, opts) do
         with {:cache, [{:signers, signers}]} <- {:cache, EtsCache.get_signers()},
              {:signer, signer} when not is_nil(signer) <- {:signer, signers[kid]} do
           {:ok, signer}
@@ -219,12 +215,17 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         case EtsCache.check_state() do
           # no need to re-fetch
           0 ->
-            JokenJwks.log(:debug, opts[:log_level], "Re-fetching cache is not needed.")
+            GuardianJwks.log(:debug, opts[:log_level], "Re-fetching cache is not needed.")
             :ok
 
           # start re-fetching
           _counter ->
-            JokenJwks.log(:debug, opts[:log_level], "Re-fetching cache is needed and will start.")
+            GuardianJwks.log(
+              :debug,
+              opts[:log_level],
+              "Re-fetching cache is needed and will start."
+            )
+
             start_fetch_signers(opts[:jwks_url], opts)
         end
       end
@@ -233,22 +234,27 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         Task.start(fn -> fetch_signers(url, opts) end)
       end
 
-      @doc "Fetch signers with `JokenJwks.HttpFetcher`"
+      @doc "Fetch signers with `GuardianJwks.HttpFetcher`"
       def fetch_signers(url, opts) do
         log_level = opts[:log_level]
 
         with {:ok, keys} <- HttpFetcher.fetch_signers(url, opts),
              {:ok, signers} <- validate_and_parse_keys(keys, opts) do
-          JokenJwks.log(:debug, log_level, "Fetched signers. #{inspect(signers)}")
+          GuardianJwks.log(:debug, log_level, "Fetched signers. #{inspect(signers)}")
           EtsCache.put_signers(signers)
           EtsCache.set_status(:ok)
         else
           {:error, _reason} = err ->
-            JokenJwks.log(:error, log_level, "Failed to fetch signers. Reason: #{inspect(err)}")
+            GuardianJwks.log(
+              :error,
+              log_level,
+              "Failed to fetch signers. Reason: #{inspect(err)}"
+            )
+
             EtsCache.set_status(:refresh)
 
           err ->
-            JokenJwks.log(
+            GuardianJwks.log(
               :error,
               log_level,
               "Unexpected error while fetching signers. Reason: #{inspect(err)}"
@@ -270,8 +276,8 @@ defmodule JokenJwks.DefaultStrategyTemplate do
 
       defp parse_signer(key, opts) do
         with {:kid, kid} when is_binary(kid) <- {:kid, key["kid"]},
-             {:ok, alg} <- get_algorithm(key["alg"], opts[:explicit_alg]),
-             {:ok, _signer} = res <- {:ok, Signer.create(alg, key)} do
+             {:ok, _alg} <- get_algorithm(key["alg"], opts[:explicit_alg]),
+             {:ok, _signer} = res <- {:ok, JWK.from_map(key)} do
           res
         else
           {:kid, _} -> {:error, :kid_not_binary}
@@ -279,7 +285,7 @@ defmodule JokenJwks.DefaultStrategyTemplate do
         end
       rescue
         e ->
-          JokenJwks.log(:error, opts[:log_level], """
+          GuardianJwks.log(:error, opts[:log_level], """
           Error while parsing a key entry fetched from the network.
 
           This should be investigated by a human.
@@ -293,7 +299,7 @@ defmodule JokenJwks.DefaultStrategyTemplate do
       end
 
       # According to JWKS spec (https://tools.ietf.org/html/rfc7517#section-4.4) the "alg"" claim
-      # is not mandatory. This is why we allow this to be passed as a hook option.
+      # is not mandatory. This is why we allow this to be passed as an option.
       #
       # We give preference to the one provided as option
       defp get_algorithm(nil, nil), do: {:error, :no_algorithm_supplied}

@@ -1,4 +1,4 @@
-defmodule JokenJwks.IntegrationTest do
+defmodule GuardianJwks.IntegrationTest do
   use ExUnit.Case, async: true
 
   @moduletag :external
@@ -7,7 +7,7 @@ defmodule JokenJwks.IntegrationTest do
   @microsoft_certs_url "https://login.microsoftonline.com/common/discovery/v2.0/keys"
 
   defmodule Strategy do
-    use JokenJwks.DefaultStrategyTemplate
+    use GuardianJwks.DefaultStrategyTemplate
   end
 
   @tag :capture_log

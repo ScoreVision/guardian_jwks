@@ -1,13 +1,13 @@
-defmodule JokenJwks.MixProject do
+defmodule GuardianJwks.MixProject do
   use Mix.Project
 
-  @version "1.1.0"
+  @version "1.0.0"
 
   def project do
     [
-      app: :joken_jwks,
+      app: :guardian_jwks,
       version: @version,
-      name: "Joken JWKS",
+      name: "Guardian JWKS",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -16,7 +16,7 @@ defmodule JokenJwks.MixProject do
       package: package(),
       deps: deps(),
       source_ref: "v#{@version}",
-      source_url: "https://github.com/joken-elixir/joken_jwks",
+      source_url: "https://github.com/ReelCoaches/guardian_jwks",
       docs: docs_config(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -39,7 +39,7 @@ defmodule JokenJwks.MixProject do
 
   defp deps do
     [
-      {:joken, "~> 2.0"},
+      {:guardian, "~> 1.0"},
       {:jason, "~> 1.1"},
       {:tesla, "~> 1.2"},
       {:hackney, "~> 1.14"},
@@ -58,30 +58,27 @@ defmodule JokenJwks.MixProject do
 
   defp description do
     """
-    JWKS (JSON Web Keys Set) support for Joken2
+    JWKS (JSON Web Keys Set) support for Guardian 1.0
     """
   end
 
   defp package do
     [
       files: ["lib", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],
-      maintainers: ["Bryan Joseph", "Victor Nascimento"],
       licenses: ["Apache 2.0"],
       links: %{
-        "GitHub" => "https://github.com/joken-elixir/joken_jwks",
-        "Docs" => "http://hexdocs.pm/joken_jwks"
+        "GitHub" => "https://github.com/ReelCoaches/guardian_jwks",
+        "Docs" => "http://hexdocs.pm/guardian_jwks"
       }
     ]
   end
 
   defp docs_config do
     [
-      extra_section: "GUIDES",
       extras: [
-        "guides/introduction.md",
         {"CHANGELOG.md", [title: "Changelog"]}
       ],
-      main: "introduction"
+      main: "GuardianJwks"
     ]
   end
 end

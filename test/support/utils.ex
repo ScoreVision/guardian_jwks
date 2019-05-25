@@ -1,4 +1,4 @@
-defmodule JokenJwks.TestUtils do
+defmodule GuardianJwks.TestUtils do
   @moduledoc "Utilities for faking a HTTP server and signer helpers"
 
   alias Joken.Signer

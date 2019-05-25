@@ -1,3 +1,3 @@
 use Mix.Config
 
-config :tesla, JokenJwks.HttpFetcher, adapter: Tesla.Adapter.Hackney
+config :tesla, GuardianJwks.HttpFetcher, adapter: Tesla.Adapter.Hackney
