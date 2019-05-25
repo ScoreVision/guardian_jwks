@@ -1,10 +1,10 @@
 # GuardianJwks
 
-[![Documentation](https://img.shields.io/badge/docs-hexpm-blue.svg)](http://hexdocs.pm/guardian_jwks/) [![Downloads](https://img.shields.io/hexpm/dt/guardian_jwks.svg)](https://hex.pm/packages/guardian_jwks) [![Build](https://travis-ci.org/joken-elixir/guardian_jwks.svg?branch=master)](https://travis-ci.org/joken-elixir/guardian_jwks)
+[![Documentation](https://img.shields.io/badge/docs-hexpm-blue.svg)](http://hexdocs.pm/guardian_jwks/) [![Downloads](https://img.shields.io/hexpm/dt/guardian_jwks.svg)](https://hex.pm/packages/guardian_jwks) [![Build](https://travis-ci.org/ReelCoaches/guardian_jwks.svg?branch=master)](https://travis-ci.org/ReelCoaches/guardian_jwks)
 
 [Documentation](http://hexdocs.pm/guardian_jwks/)
 
-A `Joken.Hooks` implementation that builds a signer out of a JWKS url for verification.
+A `Guardian.Token.Jwt.SecretFetcher` implementation that fetches a key out of a JWKS url for verification.
 
 ## Usage
 
