@@ -7,7 +7,7 @@ defmodule GuardianJwks.IntegrationTest do
   @microsoft_certs_url "https://login.microsoftonline.com/common/discovery/v2.0/keys"
 
   defmodule Strategy do
-    use GuardianJwks.DefaultStrategyTemplate
+    use GuardianJwks.KeyServer
   end
 
   @tag :capture_log
