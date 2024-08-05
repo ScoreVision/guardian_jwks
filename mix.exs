@@ -1,7 +1,7 @@
 defmodule GuardianJwks.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "2.0.0"
 
   def project do
     [
@@ -39,7 +39,7 @@ defmodule GuardianJwks.MixProject do
 
   defp deps do
     [
-      {:guardian, "~> 1.0"},
+      {:guardian, "~> 2.0"},
       {:jason, "~> 1.1"},
       {:tesla, "~> 1.2"},
       {:hackney, "~> 1.14"},
@@ -52,7 +52,7 @@ defmodule GuardianJwks.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
 
       # tests
-      {:mox, "~> 0.5", only: :test}
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
