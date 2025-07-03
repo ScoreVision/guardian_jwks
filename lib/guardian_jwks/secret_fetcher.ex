@@ -46,10 +46,11 @@ defmodule GuardianJwks.SecretFetcher do
 
   @impl true
   def fetch_signing_secret(mod, opts) do
-    log_level = opts[:log_level] || apply(mod, :config, [:jwks_log_level])
+    log_level =
+      opts[:log_level] || apply(mod, :config, [:jwks_log_level]) || :none
 
     GuardianJwks.log(
-      :warn,
+      :warning,
       log_level,
       "#{inspect(__MODULE__)} does not implement fetch_signing_secret/2."
     )
